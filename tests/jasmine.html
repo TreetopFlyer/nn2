@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Jasmine Spec Runner v2.4.1</title>
+<link rel="stylesheet" href="jasmine.css">
+<script src="jasmine.js"></script>
+
+<script src="http://treetopflyer.github.io/vcore/lib.js"></script>
+<script src="../lib.js"></script>
+
+<script>
+describe("Matrix Generator", function(){
+
+  var input, output;
+  beforeAll(function(done){
+    input = [2, 4, 2];
+    output = Network.generateMatricies(input);
+    done();
+  });
+
+
+  it("given in Input array of integers, it should produce an Output array of matricies of length Input.length-1", function(){
+    expect(output.length).toEqual(input.length-1);
+  });
+
+  it("the matrix Output[i] should have Input[i+1] vectors", function(){
+    var i;
+    for(i=0; i<output.length; i++){
+        expect(output[i].length).toEqual(input[i+1]);
+    }
+  });
+
+  it("the vectors of the matrix Output[i] should have Input[i](+1) components", function(){
+    var i, j;
+    for(i=0; i<output.length; i++){
+      for(j=0; j<output[i].length; j++){
+        expect(output[i][j].length).toEqual(input[i]+1);
+      }
+    }
+  });
+
+});
+
+describe("Neural Network", function(){
+
+  var shape;
+  var matricies;
+  var network;
+  var trainingData;
+  beforeAll(function(){
+    trainingData = [[0.1, 0.8], [0.2, 0.7], [0.15, 0.0],  [0.8, 0.05], [0.95, 0.1], [0.75, 0.5]];
+    trainingLabels = [[1, 1], [1, 1], [1, 1], [0, 0], [0, 0], [0, 0]];
+    shape = [2, 5, 5, 5, 2];
+    matricies = Network.generateMatricies(shape);
+    network = new Network(matricies);
+  });
+
+  it("should build a new neural network given an array of matricies", function(){
+    expect(network.layers.length).toEqual(matricies.length);
+  });
+
+  it("should produce an output matrix of the same length as the training set, and the same width as the length of the last matrix", function(){
+    var result;
+    var i;
+
+    result = network.observe(trainingData);
+    expect(result.length).toEqual(trainingData.length);
+
+    for(i=0; i<result.length; i++){
+      expect(result[i].length).toEqual(matricies[matricies.length-1].length);
+    }
+  });
+
+  it("should learn", function(){
+    network.train(trainingData, trainingLabels, 1000, 0.1);
+    console.log(network.observe(trainingData));
+  });
+
+
+});
+
+</script>
+</head>
+<body></body>
+</html>
