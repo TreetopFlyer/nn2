@@ -16,9 +16,9 @@ var Layer = function(inTransformer, inDeformer){
     this.input = [];
     this.output = [];
 };
-Layer.prototype.forward = function(inCloud){
-    this.input = M.Pad(inCloud);
-    this.output = this.deform.forward( M.Transform(this.transform, this.input) );
+Layer.prototype.forward = function(inCloud, inDropout){
+    this.input = M.Pad(M.Clone(inCloud));
+    this.output = Layer.dropout(this.deform.forward(M.Transform(this.transform, this.input)), inDropout);
     return this.output;
 };
 Layer.prototype.backward = function(inErrors, inLearningRate){
@@ -33,6 +33,16 @@ Layer.prototype.backward = function(inErrors, inLearningRate){
         this.transform = M.Subtract(this.transform, M.Scale(delta, inLearningRate));
     }
     return M.Unpad(M.Transform( transpose, errorDerivative));
+};
+Layer.dropout = function(inData, inChance){
+    var i, j;
+    for(i=0; i<inData.length; i++){
+        for(j=0; j<inData[i].length; j++){
+            if(Math.random() < inChance)
+                inData[i][j] = 0;
+        }
+    }
+    return inData;
 };
 Layer.Activation = {
     Sigmoid:{
@@ -89,29 +99,37 @@ var Network = function(inMatrixArray){
     }
     this.layers[inMatrixArray.length-1] = new Layer(inMatrixArray[inMatrixArray.length-1], Layer.Activation.Sigmoid);
 };
-Network.prototype.observe = function(inData){
+
+Network.prototype.forward = function(inData, inDropout){
     var observation = inData;
     for(var i=0; i<this.layers.length; i++){
-        observation = this.layers[i].forward(observation);
+        observation = this.layers[i].forward(observation, inDropout);
     }
     return observation;
 };
-Network.prototype.backpropogate = function(inError, inLearningRate){
+Network.prototype.backward = function(inError, inLearningRate){
     var error = inError;
     for(var i=this.layers.length-1; i>=0; i--){
         error = this.layers[i].backward(error, inLearningRate);
     }
 };
-Network.prototype.train = function(inData, inLabels, inIterations, inLearningRate){
-    var i, j;
+
+Network.prototype.train = function(inTrainingSet, inIterations, inLearningRate, inDropout){
+    var i;
     var error;
-    var sum;
+    var data = M.GlobalToLocal(inTrainingSet.data, M.Bounds(inTrainingSet.data));
     for(i=0; i<inIterations; i++){
-        error = M.Subtract(this.observe(inData), inLabels);
-        this.backpropogate(error, inLearningRate);
+        error = M.Subtract(this.forward(data, inDropout), inTrainingSet.labels);
+        this.backward(error, inLearningRate);
     }
-    return error;
-}
+};
+Network.prototype.error = function(inTrainingSet){
+    return M.Subtract(this.forward(inTrainingSet.data, 0), inTrainingSet.labels);
+};
+Network.prototype.observe = function(inTrainingSet){
+    return this.forward(inTrainingSet.data, 0);
+};
+
 Network.generateMatricies = function(inShapeArray){
     var output = [];
     var currentMatrix;
@@ -132,4 +150,16 @@ Network.generateMatricies = function(inShapeArray){
         output[i] = currentMatrix;
     }
     return output;
+};
+
+var TrainingSet = function(){
+    this.data = [];
+    this.labels = [];
+};
+TrainingSet.prototype.addCloud = function(inLabel, inCloud){
+    var i;
+    for(i=0; i<inCloud.length; i++){
+        this.data.push(inCloud[i]);
+        this.labels.push(inLabel);
+    }
 };

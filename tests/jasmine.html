@@ -14,7 +14,7 @@ describe("Matrix Generator", function(){
 
   var input, output;
   beforeAll(function(done){
-    input = [2, 4, 2];
+    input = [2, 100, 2];
     output = Network.generateMatricies(input);
     done();
   });
@@ -42,41 +42,72 @@ describe("Matrix Generator", function(){
 
 });
 
+describe("Neural Layer", function(){
+
+});
+
 describe("Neural Network", function(){
 
   var shape;
   var matricies;
   var network;
-  var trainingData;
+  var trainingSet;
+  var testSet;
+  var error;
+  var result;
   beforeAll(function(){
-    trainingData = [[0.1, 0.8], [0.2, 0.7], [0.15, 0.0],  [0.8, 0.05], [0.95, 0.1], [0.75, 0.5]];
-    trainingLabels = [[1, 1], [1, 1], [1, 1], [0, 0], [0, 0], [0, 0]];
-    shape = [2, 5, 5, 5, 2];
+
+    trainingSet = new TrainingSet();
+    trainingSet.addCloud([1, 0], M.Box([[0, 0], [0.2, 1]], 3));
+    trainingSet.addCloud([0, 1], M.Box([[0.5, 0], [0.7, 1]], 3));
+    trainingSet.addCloud([1, 0], M.Box([[01, 0], [1.2, 1]], 3));
+    
+    testSet = new TrainingSet();
+    testSet.addCloud([1, 0], M.Box([[0, 0], [0.2, 1]], 10));
+    testSet.addCloud([0, 1], M.Box([[0.5, 0], [0.7, 1]], 10));
+    testSet.addCloud([1, 0], M.Box([[01, 0], [1.2, 1]], 10));
+
+    shape = [2, 10, 5, 2];
     matricies = Network.generateMatricies(shape);
     network = new Network(matricies);
+
+    network.train(trainingSet, 500, 0.1, 0.0);
+    error = network.error(trainingSet);
+    result = network.observe(trainingSet);
+
+    console.log(network.observe(testSet));
+
   });
 
   it("should build a new neural network given an array of matricies", function(){
     expect(network.layers.length).toEqual(matricies.length);
   });
 
-  it("should produce an output matrix of the same length as the training set, and the same width as the length of the last matrix", function(){
-    var result;
-    var i;
+  it("should produce as many output vectors as input vectors", function(){
+    expect(result.length).toEqual(trainingSet.data.length);
+  });
 
-    result = network.observe(trainingData);
-    expect(result.length).toEqual(trainingData.length);
-
+  it("should produce output vectors with components that correspond to output of the last matrix", function(){
     for(i=0; i<result.length; i++){
       expect(result[i].length).toEqual(matricies[matricies.length-1].length);
     }
   });
 
-  it("should learn", function(){
-    network.train(trainingData, trainingLabels, 1000, 0.1);
-    console.log(network.observe(trainingData));
+  it("should learn with a low error", function(){
+    var i, j;
+    var sum;
+    var average;
+    sum = 0;
+    for(i=0; i<error.length; i++){
+      for(j=0; j<error[i].length; j++){
+        sum += Math.abs(error[i][j]);
+      }
+    }
+    average = sum/trainingSet.data.length;
+    expect(average).toBeLessThan(0.2);
   });
 
+  
 
 });
 
