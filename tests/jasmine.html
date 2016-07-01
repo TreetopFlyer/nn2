@@ -58,20 +58,20 @@ describe("Neural Network", function(){
   beforeAll(function(){
 
     trainingSet = new TrainingSet();
-    trainingSet.addCloud([1, 0], M.Box([[0, 0], [0.2, 1]], 3));
-    trainingSet.addCloud([0, 1], M.Box([[0.5, 0], [0.7, 1]], 3));
-    trainingSet.addCloud([1, 0], M.Box([[01, 0], [1.2, 1]], 3));
+    trainingSet.addCloud([1], M.Box([[0, 0], [0.2, 1]], 10));
+    trainingSet.addCloud([0], M.Box([[0.5, 0], [0.7, 1]], 10));
+    trainingSet.addCloud([1], M.Box([[01, 0], [1.2, 1]], 10));
     
     testSet = new TrainingSet();
-    testSet.addCloud([1, 0], M.Box([[0, 0], [0.2, 1]], 10));
-    testSet.addCloud([0, 1], M.Box([[0.5, 0], [0.7, 1]], 10));
-    testSet.addCloud([1, 0], M.Box([[01, 0], [1.2, 1]], 10));
+    testSet.addCloud([1], M.Box([[0, 0], [0.2, 1]], 3));
+    testSet.addCloud([0], M.Box([[0.5, 0], [0.7, 1]], 3));
+    testSet.addCloud([1], M.Box([[01, 0], [1.2, 1]], 3));
 
-    shape = [2, 10, 5, 2];
+    shape = [2, 30, 1];
     matricies = Network.generateMatricies(shape);
     network = new Network(matricies);
 
-    network.train(trainingSet, 500, 0.1, 0.0);
+    network.train(trainingSet, 100, 0.5, 0.0);
     error = network.error(trainingSet);
     result = network.observe(trainingSet);
 

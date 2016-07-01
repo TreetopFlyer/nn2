@@ -92,6 +92,7 @@ Layer.Activation = {
 //the members of inMatrixArray have to be padded before they are passed in
 var Network = function(inMatrixArray){
     this.layers = [];
+    this.bounds = [];
     if(inMatrixArray.length > 1){
         for(var i=0; i<inMatrixArray.length-1; i++){
             this.layers[i] = new Layer(inMatrixArray[i], Layer.Activation.ReLU);
@@ -116,8 +117,11 @@ Network.prototype.backward = function(inError, inLearningRate){
 
 Network.prototype.train = function(inTrainingSet, inIterations, inLearningRate, inDropout){
     var i;
-    var error;
-    var data = M.GlobalToLocal(inTrainingSet.data, M.Bounds(inTrainingSet.data));
+    var error, data;
+
+    this.bounds = M.Bounds(inTrainingSet.data);
+    data = M.GlobalToLocal(inTrainingSet.data, this.bounds);
+    
     for(i=0; i<inIterations; i++){
         error = M.Subtract(this.forward(data, inDropout), inTrainingSet.labels);
         this.backward(error, inLearningRate);
@@ -127,7 +131,7 @@ Network.prototype.error = function(inTrainingSet){
     return M.Subtract(this.forward(inTrainingSet.data, 0), inTrainingSet.labels);
 };
 Network.prototype.observe = function(inTrainingSet){
-    return this.forward(inTrainingSet.data, 0);
+    return this.forward(M.GlobalToLocal(inTrainingSet.data, this.bounds), 0);
 };
 
 Network.generateMatricies = function(inShapeArray){
