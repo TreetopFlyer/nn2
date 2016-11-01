@@ -119,7 +119,7 @@ Network.prototype.train = function(inTrainingSet, inIterations, inLearningRate, 
     var i;
     var error, data;
 
-    this.bounds = M.Bounds(inTrainingSet.data);
+    this.bounds = inTrainingSet.bounds;
     data = M.GlobalToLocal(inTrainingSet.data, this.bounds);
     
     for(i=0; i<inIterations; i++){
@@ -159,9 +159,15 @@ Network.generateMatricies = function(inShapeArray){
 var TrainingSet = function(){
     this.data = [];
     this.labels = [];
+    this.bounds = [];
 };
 TrainingSet.prototype.addCloud = function(inLabel, inCloud){
     var i;
+    var cloudBounds;
+
+    cloudBounds = M.Bounds(inCloud);
+    this.bounds = M.Bounds(cloudBounds.concat(this.bounds));
+
     for(i=0; i<inCloud.length; i++){
         this.data.push(inCloud[i]);
         this.labels.push(inLabel);
