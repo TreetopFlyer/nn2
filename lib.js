@@ -115,12 +115,19 @@ Network.prototype.backward = function(inError, inLearningRate){
     }
 };
 
-Network.prototype.train = function(inTrainingSet, inIterations, inLearningRate, inDropout){
+Network.prototype.train = function(inTrainingSet, inIterations, inLearningRate, inDropout, inNormalize){
     var i;
     var error, data;
 
     this.bounds = inTrainingSet.bounds;
-    data = M.GlobalToLocal(inTrainingSet.data, this.bounds);
+    if(inNormalize)
+    {
+        data = M.GlobalToLocal(inTrainingSet.data, this.bounds);
+    }
+    else
+    {
+        data = inTrainingSet.data;
+    }
     
     for(i=0; i<inIterations; i++){
         error = M.Subtract(this.forward(data, inDropout), inTrainingSet.labels);
